@@ -1,0 +1,71 @@
+#draw shape on images
+
+import cv2
+import numpy as np
+'''
+img = np.zeros((500,500,3), dtype=np.uint8)
+
+cv2.line(img, (60,60), (450,50), (255,0,0), 10)
+
+cv2.rectangle(img, (100,100), (400,300), (0,255,0),3)
+
+cv2.circle(img, (250,400), 50, (0,0,255), -1)
+
+cv2.putText(img, 'Hello OpenCV!', (120,250), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255,0), 2)
+
+cv2.imshow("Drawing", img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()'''
+
+#convert to grayscale and apply Blur
+
+'''img = cv2.imread("shap1.png")
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+blur = cv2.GaussianBlur(gray, (7,7), 0)
+
+cv2.imshow("Original", img)
+cv2.imshow("Gray", gray)
+cv2.imshow("Blurred", blur)
+cv2.waitKey(0)
+cv2.destroyAllWindows()'''
+
+#face detection using Haar Cascades
+
+'''face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+img = cv2.imread('face.jpg')
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+for (x, y, w, h) in faces:
+    cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 0), 2)
+    cv2.circle(img, (x,y), w, (255, 255, 0), 1)
+
+cv2.imshow("Faces", img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()'''
+
+#gray scale conversion and edge detection
+
+import cv2
+
+# Load the image
+img = cv2.imread('image.jpg')  # Replace 'image.jpg' with your image file
+
+# Convert to grayscale
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+# Apply Canny edge detection
+edges = cv2.Canny(gray, 50, 150)
+
+#Apply Gaussian Blur
+
+blur = cv2.GaussianBlur(img, (7,7), 0)
+
+# Show all results
+cv2.imshow("Original Image", img)
+cv2.imshow("Grayscale Image", gray)
+cv2.imshow("Edge Detected Image", edges)
+cv2.imshow("Blured Image", blur)
+
+cv2.waitKey(0)
+cv2.destroyAllWindows()
