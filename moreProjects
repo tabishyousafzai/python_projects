@@ -1,0 +1,209 @@
+#draw shape on images
+
+import cv2
+import numpy as np
+'''
+img = np.zeros((500,500,3), dtype=np.uint8)
+
+cv2.line(img, (60,60), (450,50), (255,0,0), 10)
+
+cv2.rectangle(img, (100,100), (400,300), (0,255,0),3)
+
+cv2.circle(img, (250,400), 50, (0,0,255), -1)
+
+cv2.putText(img, 'Hello OpenCV!', (120,250), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255,0), 2)
+
+cv2.imshow("Drawing", img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()'''
+
+#convert to grayscale and apply Blur
+
+'''img = cv2.imread("shap1.png")
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+blur = cv2.GaussianBlur(gray, (7,7), 0)
+
+cv2.imshow("Original", img)
+cv2.imshow("Gray", gray)
+cv2.imshow("Blurred", blur)
+cv2.waitKey(0)
+cv2.destroyAllWindows()'''
+
+#face detection using Haar Cascades
+
+'''face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+img = cv2.imread('face.jpg')
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+for (x, y, w, h) in faces:
+    cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 0), 2)
+    cv2.circle(img, (x,y), w, (255, 255, 0), 1)
+
+cv2.imshow("Faces", img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()'''
+
+#gray scale conversion and edge detection
+'''
+import cv2
+
+# Load the image
+img = cv2.imread('image.jpg')  # Replace 'image.jpg' with your image file
+
+# Convert to grayscale
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+# Apply Canny edge detection
+edges = cv2.Canny(gray, 50, 150)
+
+#Apply Gaussian Blur
+
+blur = cv2.GaussianBlur(img, (7,7), 0)
+
+# Show all results
+cv2.imshow("Original Image", img)
+cv2.imshow("Grayscale Image", gray)
+cv2.imshow("Edge Detected Image", edges)
+cv2.imshow("Blured Image", blur)
+
+cv2.waitKey(0)
+cv2.destroyAllWindows()'''
+'''
+#caroonify an image
+
+import cv2 #import OpenCV library
+
+img = cv2.imread("photo.jpg")  #loading image
+
+img = cv2.resize(img, (600,400)) #reshaping image for faster speed
+
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #convert color image to gray for faster processing
+
+gray_blur = cv2.medianBlur(gray, 5) #removing image noise 
+
+edges = cv2.adaptiveThreshold(gray_blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 9 , 9) #detect edges, small areas of the image taken and compared pixel values (giving a sketch type image)
+
+color = cv2.bilateralFilter(img, d=9, sigmaColor = 300, sigmaSpace=300) #apply filter to smooth colors whiles keeping edges
+
+cartoon = cv2.bitwise_and(color, color, mask=edges) #keep only parts of color and edges where its white
+
+cv2.imshow("Original", img)
+cv2.imshow("Cartoon", cartoon)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+'''
+#background removal algo
+'''
+import cv2
+import numpy as np
+
+img = cv2.imread("photo1.jpg")
+
+if img is None:
+    print(" X Error: Cloud not load image")
+    exit()
+
+img = cv2.resize(img, (600,400))
+
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+_, mask = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY)
+
+mask_inv = cv2.bitwise_not(mask)
+
+foreground = cv2. bitwise_and(img, img, mask=mask_inv)
+
+white_bg = np.full(img.shape, 255, dtype=np.uint8)
+
+background = cv2.bitwise_and(white_bg, white_bg, mask=mask)
+
+final = cv2.add(foreground, background)
+
+cv2.imshow("Original", img)
+cv2.imshow("Gray", gray)
+cv2.imshow("Mask", mask)
+cv2.imshow("Inverted Mask", mask_inv)
+cv2.imshow("Foreground (object only)", foreground)
+cv2.imshow("Final Image (No Background)", final)
+
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+'''
+#A mini Unet like CNN
+'''
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class MiniSegModel(nn.Module):  #nn.Module = base class for all module in pyTorch / create a custom neural network class
+    def __init__(self, in_channels = 3, num_classes = 3):
+        super(MiniSegModel, self).__init__()
+
+        #Encoder: Conv -> ReLU -> MaxPool
+
+        self.encoder = nn.Sequential(
+            nn.Conv2d(in_channels, 16, kernel_size=3, padding=1), #a convolutional layer (extracts features)
+            nn.ReLU(), # adds non-linearity
+            nn.MaxPool2d(2) #downsample an image by a factopr of 2
+        )
+
+        #Decoder: Unsample -> Conv -> ReLU
+
+        self.decoder = nn.Sequential(
+            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True), #unsample the image to original size
+            nn.Conv2d(16,16,kernel_size=3,padding=1), #convert 16 channels -> number of classes
+            nn.ReLU() # adds non-linearity
+        )
+
+        #Final Output Layer (convert 16 -> num_classses)
+
+        self.output_layer = nn.Conv2d(16, num_classes, kernel_size=1)
+
+    def forward(self, x):  #actual flow of data through the model
+        x = self.encoder(x)
+        x = self.decoder(x)
+        x = self.output_layer(x) #output shape : [batch, num_classes, height, width]
+        return x
+#create model instance
+model = MiniSegModel(in_channels=3, num_classes=3)
+
+#simulate a random image batch: [batch_size, channels, height, width]
+dummy_input = torch.randn(1,3,128,128) #e.g RGB image of size 128x128
+
+#run through model
+output = model(dummy_input)
+
+print("input shape : ", dummy_input.shape)
+print("Output shape : ", output.shape)
+
+'''
+# Object/Face detection using Haar Cascade
+'''
+import cv2
+
+# Load the pre-trained Haar Cascade model for face detection (you can use other models too)
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalcatface.xml')
+
+# Load a static image (make sure the image file is in the same directory or give full path)
+image = cv2.imread("cats.png")
+
+#Convert image to gray scale
+gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+#detect the faces in the image
+faces = face_cascade.detectMultiScale(gray, scaleFactor = 1.1, minNeighbors=5)
+
+#draw rectangles around detected faces
+for (x, y, w, h) in faces:
+    cv2.rectangle(image, (x,y), (x+w, y+h), (0, 255, 0), 2)
+
+#Display the output
+cv2.imshow("Detected Faces", image)
+cv2.imshow("Gray Scale Image", gray)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+
+'''
+#
